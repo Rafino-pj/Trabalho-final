@@ -3,7 +3,21 @@
 #include <string.h>
 
 /*
- * Funcao hash interna (metodo da divisao com soma simples de caracteres).
+ * TODO (Alisson, main.c): antes de chamar qualquer funcao deste modulo,
+ * a tabelaUsuarios deve ser inicializada com NULL em todas as posicoes
+ * (TAM_TABELA posicoes). Sem isso, os ponteiros guardam lixo de memoria
+ * e a busca pode acessar enderecos invalidos.
+ */
+
+/*
+ * TODO (Felipe): confirmar que strnlen e reconhecida pelo compilador do
+ * professor. Compilar com "gcc -std=c99 -Wall -Wextra -c usuario.c".
+ * Se aparecer "implicit declaration of function 'strnlen'", resolver
+ * (macro _POSIX_C_SOURCE ou funcao propria) antes da integracao.
+ */
+
+/*
+ * Funcao hash interna (metodo da divisao com polinomio simples).
  * Retorna um indice valido entre 0 e TAM_TABELA - 1.
  */
 static unsigned int calcularHash(const char* login) {
@@ -18,7 +32,7 @@ static unsigned int calcularHash(const char* login) {
  * Cadastra um usuario na tabela hash.
  * Retornos:
  *  1 -> Cadastro realizado com sucesso
- *  0 -> Erro: login ja cadastrado ou ponteiro invalido
+ *  0 -> Erro: ponteiro invalido, tamanho excedido (>= 30 chars) ou login ja cadastrado
  * -1 -> Erro: falha de alocacao de memoria
  */
 int cadastrarUsuario(Usuario* novoUsuario, NoUsuario* tabelaUsuarios[TAM_TABELA]) {
@@ -26,9 +40,19 @@ int cadastrarUsuario(Usuario* novoUsuario, NoUsuario* tabelaUsuarios[TAM_TABELA]
         return 0;
     }
 
+    // 1. Blindagem contra buffer overflow:
+    // Verifica se login e senha tem no maximo 29 caracteres uteis (+1 para o '\0').
+    // strnlen evita ler alem do limite caso a string de entrada nao tenha '\0'.
+    size_t tamLogin = strnlen(novoUsuario->login, TAM_LOGIN);
+    size_t tamSenha = strnlen(novoUsuario->senha, TAM_SENHA);
+
+    if (tamLogin == 0 || tamLogin >= TAM_LOGIN || tamSenha == 0 || tamSenha >= TAM_SENHA) {
+        return 0; // Recusa entrada vazia ou que estoure o limite de 29 caracteres
+    }
+
     unsigned int indice = calcularHash(novoUsuario->login);
 
-    // 1. Verifica se o login ja existe na lista encadeada daquela posicao
+    // 2. Verifica se o login ja existe na lista encadeada daquela posicao
     NoUsuario* atual = tabelaUsuarios[indice];
     while (atual != NULL) {
         if (strcmp(atual->info->login, novoUsuario->login) == 0) {
@@ -37,22 +61,24 @@ int cadastrarUsuario(Usuario* novoUsuario, NoUsuario* tabelaUsuarios[TAM_TABELA]
         atual = atual->prox;
     }
 
-    // 2. Aloca memoria para a copia dos dados do usuario
+    // 3. Aloca memoria para a copia dos dados do usuario
     Usuario* usuarioAlocado = (Usuario*)malloc(sizeof(Usuario));
     if (usuarioAlocado == NULL) {
         return -1; // Falha de memoria
     }
-    strcpy(usuarioAlocado->login, novoUsuario->login);
-    strcpy(usuarioAlocado->senha, novoUsuario->senha);
 
-    // 3. Aloca memoria para o novo no da lista de colisoes
+    // Copia garantindo o terminador nulo '\0' no final
+    memcpy(usuarioAlocado->login, novoUsuario->login, tamLogin + 1);
+    memcpy(usuarioAlocado->senha, novoUsuario->senha, tamSenha + 1);
+
+    // 4. Aloca memoria para o novo no da lista de colisoes
     NoUsuario* novoNo = (NoUsuario*)malloc(sizeof(NoUsuario));
     if (novoNo == NULL) {
         free(usuarioAlocado); // Evita vazamento de memoria
         return -1;
     }
 
-    // 4. Insere o novo no no inicio da lista encadeada (O(1))
+    // 5. Insere o novo no no inicio da lista encadeada (O(1))
     novoNo->info = usuarioAlocado;
     novoNo->prox = tabelaUsuarios[indice];
     tabelaUsuarios[indice] = novoNo;
@@ -64,10 +90,16 @@ int cadastrarUsuario(Usuario* novoUsuario, NoUsuario* tabelaUsuarios[TAM_TABELA]
  * Valida login e senha na tabela hash.
  * Retornos:
  *  1 -> Login e senha validos (usuario autenticado)
- *  0 -> Usuario nao encontrado ou senha incorreta
+ *  0 -> Usuario nao encontrado, senha incorreta ou entrada invalida
  */
 int validarUsuario(Usuario* dadoslogin, NoUsuario* tabelaUsuarios[TAM_TABELA]) {
     if (dadoslogin == NULL || tabelaUsuarios == NULL) {
+        return 0;
+    }
+
+    // Protecao tambem na validacao para garantir que a leitura nao passe do limite
+    if (strnlen(dadoslogin->login, TAM_LOGIN) >= TAM_LOGIN ||
+        strnlen(dadoslogin->senha, TAM_SENHA) >= TAM_SENHA) {
         return 0;
     }
 
@@ -77,7 +109,6 @@ int validarUsuario(Usuario* dadoslogin, NoUsuario* tabelaUsuarios[TAM_TABELA]) {
     NoUsuario* atual = tabelaUsuarios[indice];
     while (atual != NULL) {
         if (strcmp(atual->info->login, dadoslogin->login) == 0) {
-            // Login encontrado; verifica se a senha confere
             if (strcmp(atual->info->senha, dadoslogin->senha) == 0) {
                 return 1; // Autenticado
             }
