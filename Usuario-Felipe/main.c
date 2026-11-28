@@ -176,13 +176,15 @@ static void opcaoVenderProduto(const ListaProdutos *lista, const Carga *raiz)
     venderProduto(lista, raiz);
 }
 
-/* Recebe: nada.
+/* Recebe: os produtos, a fila de entregas e a arvore de cargas.
  * Retorna: nada.
- * Faz: avisa que falta o modulo do Gustavo (opcao 5). */
-static void opcaoRelatorios(void)
+ * Faz: imprime os tres relatorios (produtos, entregas pendentes e cargas). */
+static void opcaoRelatorios(const ListaProdutos *lista, const Fila *fila, const Carga *raiz)
 {
     imprimirCabecalho("RELATORIOS");
-    printf("Funcao ainda nao integrada (Gustavo).\n");
+    listarProdutos(lista);
+    listarFila(fila);
+    listarCargas(raiz);
 }
 
 /* Recebe: nada.
@@ -238,7 +240,7 @@ int main(void)
         case 2: opcaoCadastrarProduto(&produtos);                    break;
         case 3: opcaoEntregasECargas(&produtos, &entregas, &cargas); break;
         case 4: opcaoVenderProduto(&produtos, cargas);               break;
-        case 5: opcaoRelatorios();                                   break;
+        case 5: opcaoRelatorios(&produtos, &entregas, cargas);                                   break;
         case 6:                                                      break;
         default: printf("Opcao inexistente.\n");
         }
