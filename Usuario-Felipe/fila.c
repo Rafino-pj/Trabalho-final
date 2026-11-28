@@ -55,7 +55,7 @@ int enfileirarEntrega(Fila *fila, Entrega entrega)
     if (entrega.nomeDestinatario[0] == '\0')
         return 0;
 
-    if (!validarCPF(entrega.cpf))
+    if (!validarCPF(entrega.cpfDestinatario))
     {
         printf("CPF invalido! Digite 11 numeros.\n");
         return 0;
@@ -133,7 +133,7 @@ void listarFila(const Fila *fila)
 
         printf("%-10d | %-11s | %-30s\n",
                atual->dados.idProduto,
-               atual->dados.cpf,
+               atual->dados.cpfDestinatario,
                atual->dados.nomeDestinatario);
     }
 }
