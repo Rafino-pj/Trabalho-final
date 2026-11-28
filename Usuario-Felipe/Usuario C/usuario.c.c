@@ -1,20 +1,8 @@
+#define _POSIX_C_SOURCE 200809L
+#define _POSIX_C_SOURCE 200809L
 #include "usuario.h"
 #include <stdlib.h>
 #include <string.h>
-
-/*
- * TODO (Alisson, main.c): antes de chamar qualquer funcao deste modulo,
- * a tabelaUsuarios deve ser inicializada com NULL em todas as posicoes
- * (TAM_TABELA posicoes). Sem isso, os ponteiros guardam lixo de memoria
- * e a busca pode acessar enderecos invalidos.
- */
-
-/*
- * TODO (Felipe): confirmar que strnlen e reconhecida pelo compilador do
- * professor. Compilar com "gcc -std=c99 -Wall -Wextra -c usuario.c".
- * Se aparecer "implicit declaration of function 'strnlen'", resolver
- * (macro _POSIX_C_SOURCE ou funcao propria) antes da integracao.
- */
 
 /*
  * Funcao hash interna (metodo da divisao com polinomio simples).
