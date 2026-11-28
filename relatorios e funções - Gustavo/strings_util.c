@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stddef.h>
 /*
  * strings_util.c
  * Implementacao das funcoes utilitarias de string.
